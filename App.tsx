@@ -10,17 +10,20 @@ import { MarketJobs } from './components/MarketJobs';
 import { MarketTravel } from './components/MarketTravel';
 import { MarketEcommerce } from './components/MarketEcommerce';
 import { MarketFreelance } from './components/MarketFreelance';
+import { MarketCars } from './components/MarketCars';
+import { ProfileView } from './components/ProfileView';
 import { aiService } from './services/geminiService';
 import { supabase } from './services/supabaseClient';
 import { COUNTRIES, TRANSLATIONS } from './constants';
 import { MarketType, Country, CartItem } from './types';
-import { MessageCircle, X, Send, Home, Bitcoin, Briefcase, ShoppingBag, Code, Plane } from 'lucide-react';
+import { MessageCircle, X, Send, Home, Bitcoin, Briefcase, ShoppingBag, Code, Plane, Car, UserCircle } from 'lucide-react';
 import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 const App: React.FC = () => {
   const [lang, setLang] = useState<'en' | 'ar' | 'fr' | 'es'>('en');
   const [currentCountry, setCountry] = useState<Country>(COUNTRIES[0]);
   const [activeMarket, setActiveMarket] = useState<MarketType>(MarketType.REAL_ESTATE);
+  const [view, setView] = useState<'market' | 'profile'>('market');
   const [showWelcome, setShowWelcome] = useState(true);
   const [showChat, setShowChat] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
@@ -40,13 +43,7 @@ const App: React.FC = () => {
       if (session?.user) {
         const u = session.user;
         const selectedCountry = COUNTRIES.find(c => c.code === u.user_metadata?.country) || COUNTRIES[0];
-        setUser({
-          id: u.id,
-          name: u.user_metadata?.full_name || u.email,
-          email: u.email,
-          country: selectedCountry,
-          balance: 0
-        });
+        setUser({ id: u.id, name: u.user_metadata?.full_name || u.email, email: u.email, country: selectedCountry, balance: 0 });
         setShowWelcome(false);
       }
     };
@@ -56,13 +53,7 @@ const App: React.FC = () => {
       if (session?.user) {
         const u = session.user;
         const selectedCountry = COUNTRIES.find(c => c.code === u.user_metadata?.country) || COUNTRIES[0];
-        setUser({
-          id: u.id,
-          name: u.user_metadata?.full_name || u.email,
-          email: u.email,
-          country: selectedCountry,
-          balance: 0
-        });
+        setUser({ id: u.id, name: u.user_metadata?.full_name || u.email, email: u.email, country: selectedCountry, balance: 0 });
         setShowWelcome(false);
       } else {
         setUser(null);
@@ -76,23 +67,12 @@ const App: React.FC = () => {
     await supabase.auth.signOut();
     setUser(null);
     setShowWelcome(true);
-  };
-
-  const handleSendMessage = async () => {
-    if (!chatMessage.trim()) return;
-    const userMsg = chatMessage;
-    setChatHistory(prev => [...prev, { role: 'user', text: userMsg }]);
-    setChatMessage('');
-    setIsTyping(true);
-
-    const context = `User: ${user?.name || 'Guest'}, Market: ${activeMarket}, Location: ${currentCountry.name}`;
-    const botResponse = await aiService.getWealthAdvice(userMsg, context);
-    
-    setChatHistory(prev => [...prev, { role: 'bot', text: botResponse }]);
-    setIsTyping(false);
+    setView('market');
   };
 
   const renderMarket = () => {
+    if (view === 'profile') return <ProfileView user={user} lang={lang} onClose={() => setView('market')} />;
+    
     switch (activeMarket) {
       case MarketType.REAL_ESTATE: return <MarketRealEstate country={currentCountry} lang={lang} onAddClick={() => user ? setShowAddModal(true) : setShowAuth(true)} />;
       case MarketType.CRYPTO: return <MarketCrypto country={currentCountry} lang={lang} />;
@@ -100,6 +80,7 @@ const App: React.FC = () => {
       case MarketType.TRAVEL: return <MarketTravel country={currentCountry} lang={lang} />;
       case MarketType.ECOMMERCE: return <MarketEcommerce country={currentCountry} lang={lang} onAddToCart={(p) => setCart([...cart, {...p, quantity: 1}])} />;
       case MarketType.FREELANCE: return <MarketFreelance country={currentCountry} lang={lang} />;
+      case MarketType.CARS: return <MarketCars country={currentCountry} lang={lang} onAddClick={() => user ? setShowAddModal(true) : setShowAuth(true)} />;
       default: return null;
     }
   };
@@ -111,37 +92,45 @@ const App: React.FC = () => {
       ) : (
         <>
           <Navbar 
-            currentCountry={currentCountry} 
-            setCountry={setCountry} 
-            lang={lang} 
-            setLang={setLang} 
-            user={user}
-            onAuthClick={() => setShowAuth(true)}
-            onLogout={handleLogout}
+            currentCountry={currentCountry} setCountry={setCountry} lang={lang} setLang={setLang} user={user}
+            onAuthClick={() => setShowAuth(true)} onLogout={handleLogout}
           />
-          <main className="max-w-7xl mx-auto px-4 lg:px-8 pt-36 pb-24 animate-in fade-in duration-1000">
-            <div className="flex overflow-x-auto gap-4 mb-16 no-scrollbar pb-4">
-              {[
-                { id: MarketType.REAL_ESTATE, label: t('realEstate'), icon: <Home className="w-5 h-5" /> },
-                { id: MarketType.CRYPTO, label: t('crypto'), icon: <Bitcoin className="w-5 h-5" /> },
-                { id: MarketType.JOBS, label: t('jobs'), icon: <Briefcase className="w-5 h-5" /> },
-                { id: MarketType.ECOMMERCE, label: t('ecommerce'), icon: <ShoppingBag className="w-5 h-5" /> },
-                { id: MarketType.FREELANCE, label: t('freelance'), icon: <Code className="w-5 h-5" /> },
-                { id: MarketType.TRAVEL, label: t('travel'), icon: <Plane className="w-5 h-5" /> },
-              ].map(tab => (
-                <button key={tab.id} onClick={() => setActiveMarket(tab.id)} className={`flex items-center gap-4 px-10 py-6 rounded-3xl font-black text-sm transition-all duration-500 ${activeMarket === tab.id ? 'bg-blue-600 text-white shadow-2xl scale-105' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}>
-                  {tab.icon}
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+          <main className="max-w-7xl mx-auto px-4 lg:px-8 pt-36 pb-24">
+            {view === 'market' && (
+              <div className="flex overflow-x-auto gap-4 mb-16 no-scrollbar pb-4 animate-in fade-in slide-in-from-top-4 duration-700">
+                {[
+                  { id: MarketType.REAL_ESTATE, label: t('realEstate'), icon: <Home /> },
+                  { id: MarketType.CRYPTO, label: t('crypto'), icon: <Bitcoin /> },
+                  { id: MarketType.CARS, label: t('cars'), icon: <Car /> },
+                  { id: MarketType.JOBS, label: t('jobs'), icon: <Briefcase /> },
+                  { id: MarketType.ECOMMERCE, label: t('ecommerce'), icon: <ShoppingBag /> },
+                  { id: MarketType.FREELANCE, label: t('freelance'), icon: <Code /> },
+                  { id: MarketType.TRAVEL, label: t('travel'), icon: <Plane /> },
+                ].map(tab => (
+                  <button key={tab.id} onClick={() => setActiveMarket(tab.id)} className={`flex items-center gap-4 px-10 py-6 rounded-3xl font-black text-sm transition-all duration-500 whitespace-nowrap ${activeMarket === tab.id ? 'bg-blue-600 text-white shadow-2xl scale-105' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}>
+                    <span className="w-5 h-5">{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
             {renderMarket()}
           </main>
+
+          {/* User Side Nav */}
+          <div className={`fixed top-1/2 -translate-y-1/2 ${isAr ? 'left-6' : 'right-6'} z-40 hidden xl:flex flex-col gap-4`}>
+             <button onClick={() => setView(view === 'profile' ? 'market' : 'profile')} className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all ${view === 'profile' ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}>
+                <UserCircle className="w-8 h-8" />
+             </button>
+             <button onClick={() => setShowAddModal(true)} className="w-16 h-16 rounded-2xl bg-emerald-500 text-white flex items-center justify-center hover:scale-110 transition-all shadow-xl shadow-emerald-500/20">
+                <Send className="w-6 h-6" />
+             </button>
+          </div>
         </>
       )}
 
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} onSuccess={(u) => { setUser(u); setShowWelcome(false); }} lang={lang} />
-      <AddListingModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} onSuccess={() => alert(isAr ? 'تم النشر!' : 'Posted!')} lang={lang} type={activeMarket} />
+      <AddListingModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} onSuccess={() => alert(isAr ? 'تم بنجاح!' : 'Posted Successfully!')} lang={lang} type={activeMarket} />
 
       {!showWelcome && (
         <div className={`fixed bottom-8 ${isAr ? 'left-8' : 'right-8'} z-50`}>
@@ -159,11 +148,10 @@ const App: React.FC = () => {
                     <div className={`max-w-[80%] p-4 rounded-2xl text-sm font-medium ${m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border text-slate-700'}`}>{m.text}</div>
                   </div>
                 ))}
-                {isTyping && <div className="text-xs text-slate-400 font-bold animate-pulse">Thinking...</div>}
               </div>
               <div className="p-4 bg-white border-t flex gap-2">
-                <input value={chatMessage} onChange={e => setChatMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendMessage()} className="flex-1 bg-slate-100 px-4 py-3 rounded-xl focus:outline-none" placeholder="Ask AI..." />
-                <button onClick={handleSendMessage} className="bg-blue-600 p-3 rounded-xl text-white"><Send className="w-5 h-5" /></button>
+                <input value={chatMessage} onChange={e => setChatMessage(e.target.value)} onKeyDown={e => e.key === 'Enter'} className="flex-1 bg-slate-100 px-4 py-3 rounded-xl focus:outline-none" placeholder="Ask AI..." />
+                <button className="bg-blue-600 p-3 rounded-xl text-white"><Send className="w-5 h-5" /></button>
               </div>
             </div>
           )}

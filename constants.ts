@@ -1,11 +1,9 @@
 
 import { Country, TranslationStrings } from './types';
 
-// Real-world configuration
 export const API_CONFIG = {
   EXCHANGE_RATE_KEY: 'a06a5496ee0d90cef5bcb62924325393',
   CLOUDINARY_URL: 'cloudinary://935912428268229:9P_St-D8wYiG1kysaQM0dHQ7l6k@dxuhj3uuz',
-  MONGODB_URI: 'mongodb+srv://getwealthos:GetWealthOS2026!@cluster0.5zffcaf.mongodb.net/getwealthos'
 };
 
 export const COUNTRIES: Country[] = [
@@ -21,14 +19,15 @@ export const COUNTRIES: Country[] = [
 ];
 
 export const TRANSLATIONS: TranslationStrings = {
-  welcome: { en: "Welcome to GetWealthOS", ar: "مرحباً بكم في GetWealthOS", fr: "Bienvenue sur GetWealthOS", es: "Bienvenido a GetWealthOS" },
-  tagline: { en: "Your Global Platform for Wealth", ar: "منصتك العالمية للثراء", fr: "Votre plateforme mondiale pour la richesse", es: "Tu plataforma global para la riqueza" },
-  explore: { en: "Start Now", ar: "ابدأ الآن", fr: "Commencer", es: "Empezar" },
-  realEstate: { en: "Real Estate", ar: "العقارات", fr: "Immobilier", es: "Bienes Raíces" },
-  crypto: { en: "Crypto P2P", ar: "العملات الرقمية", fr: "Crypto P2P", es: "Cripto P2P" },
-  jobs: { en: "Jobs", ar: "الوظائف", fr: "Emplois", es: "Empleos" },
-  freelance: { en: "Freelance", ar: "العمل الحر", fr: "Freelance", es: "Freelance" },
-  ecommerce: { en: "Marketplace", ar: "السوق", fr: "Marché", es: "Mercado" },
-  travel: { en: "Travel", ar: "السفر", fr: "Voyage", es: "Viajes" },
-  startSelling: { en: "Start Selling", ar: "ابدأ البيع", fr: "Commencer à vendre", es: "Empezar a vender" }
+  welcome: { en: "The Wealth Protocol", ar: "بروتوكول الثراء العالمي", fr: "Le Protocole de Richesse", es: "El Protocolo de Riqueza" },
+  tagline: { en: "Elite Asset Management & Global Trade", ar: "إدارة الأصول النخبوية والتجارة العالمية", fr: "Gestion d'actifs d'élite & commerce mondial", es: "Gestión de activos de élite y comercio global" },
+  explore: { en: "ENTER ECOSYSTEM", ar: "دخول النظام البيئي", fr: "ENTRER DANS L'ÉCOSYSTÈME", es: "ENTRAR AL ECOSISTEMA" },
+  realEstate: { en: "Estate & Rental", ar: "العقارات والكراء", fr: "Immobilier & Location", es: "Bienes Raíces y Alquiler" },
+  crypto: { en: "Capital", ar: "رأس المال", fr: "Capital", es: "Capital" },
+  jobs: { en: "Careers", ar: "المسارات المهنية", fr: "Carrières", es: "Carreras" },
+  freelance: { en: "Expertise", ar: "الخبرات", fr: "Expertise", es: "Experticia" },
+  ecommerce: { en: "Market", ar: "السوق الرقمي", fr: "Marché", es: "Mercado" },
+  travel: { en: "Mobility", ar: "التنقل العالمي", fr: "Mobilité", es: "Movilidad" },
+  cars: { en: "Automotive", ar: "السيارات والمحركات", fr: "Automobile", es: "Automotriz" },
+  startSelling: { en: "LIST ASSET", ar: "نشر أصل", fr: "LISTER UN ACTIF", es: "LISTAR ACTIVO" }
 };

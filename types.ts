@@ -5,7 +5,20 @@ export enum MarketType {
   JOBS = 'JOBS',
   FREELANCE = 'FREELANCE',
   ECOMMERCE = 'ECOMMERCE',
-  TRAVEL = 'TRAVEL'
+  TRAVEL = 'TRAVEL',
+  CARS = 'CARS'
+}
+
+export interface UserProfile {
+  id: string;
+  full_name: string;
+  avatar_url?: string;
+  phone?: string;
+  profession?: string;
+  cv_url?: string;
+  bio?: string;
+  is_public: boolean;
+  country: string;
 }
 
 export interface Country {
