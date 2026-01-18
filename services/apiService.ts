@@ -1,5 +1,4 @@
 
-import { API_CONFIG } from '../constants';
 import { supabase } from './supabaseClient';
 
 export class ApiService {
@@ -10,18 +9,10 @@ export class ApiService {
     return ApiService.instance;
   }
 
-  private async getAuthHeader() {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {};
-    } catch (e) {
-      return {};
-    }
-  }
-
+  // جلب أسعار العملات (لا تزال عبر API خارجي لأنها بيانات متغيرة)
   async getExchangeRates(base: string = 'USD') {
     try {
-      const response = await fetch(`/api/exchange?base=${base}`);
+      const response = await fetch(`https://v6.exchangerate-api.com/v6/a06a5496ee0d90cef5bcb62924325393/latest/${base}`);
       const data = await response.json();
       return data.conversion_rates;
     } catch (err) {
@@ -30,9 +21,10 @@ export class ApiService {
     }
   }
 
+  // جلب أسعار العملات الرقمية
   async getCryptoRates() {
     try {
-      const response = await fetch('/api/crypto');
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,binancecoin,solana&vs_currencies=usd&include_24hr_change=true');
       return await response.json();
     } catch (err) {
       console.error("CoinGecko API Error:", err);
@@ -40,47 +32,45 @@ export class ApiService {
     }
   }
 
-  async getProfile() {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-      
-      return {
-        id: user.id,
-        name: user.user_metadata?.full_name || user.email,
-        email: user.email,
-        country: user.user_metadata?.country,
-        balance: 0
-      };
-    } catch (err) {
-      console.error("Profile Fetch Error:", err);
-      return null;
-    }
-  }
-
+  // جلب العروض من Supabase
   async getListings(type?: string) {
     try {
-      const response = await fetch(`/api/listings${type ? `?type=${type}` : ''}`);
-      if (!response.ok) return [];
-      return await response.json();
+      let query = supabase.from('listings').select('*');
+      if (type) {
+        query = query.eq('type', type);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
+      if (error) {
+        // إذا لم يكن الجدول موجوداً بعد، سنعيد مصفوفة فارغة لنتجنب انهيار التطبيق
+        console.warn("Supabase Table missing or error:", error);
+        return [];
+      }
+      return data || [];
     } catch (err) {
       console.error("Listings Fetch Error:", err);
       return [];
     }
   }
 
+  // إضافة عرض جديد إلى Supabase
   async createListing(listingData: any) {
     try {
-      const headers = await this.getAuthHeader();
-      const response = await fetch('/api/listings', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...headers
-        },
-        body: JSON.stringify(listingData)
-      });
-      return await response.json();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Unauthorized");
+
+      const { data, error } = await supabase
+        .from('listings')
+        .insert([{
+          ...listingData,
+          user_id: user.id,
+          created_at: new Date().toISOString()
+        }])
+        .select();
+
+      if (error) throw error;
+      return data[0];
     } catch (err) {
       console.error("Create Listing Error:", err);
       throw err;

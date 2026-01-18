@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Upload, DollarSign, Tag, Info, Loader2, Camera } from 'lucide-react';
+import { X, Upload, DollarSign, Tag, Info, Loader2 } from 'lucide-react';
 import { MarketType } from '../types';
 import { globalApi } from '../services/apiService';
 
@@ -32,13 +32,13 @@ export const AddListingModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, l
     try {
       await globalApi.createListing({
         ...formData,
-        price: parseFloat(formData.price),
-        createdAt: new Date().toISOString()
+        price: parseFloat(formData.price)
       });
       onSuccess();
       onClose();
-    } catch (err) {
-      alert(isAr ? 'فشل النشر، يرجى المحاولة لاحقاً' : 'Failed to post asset');
+    } catch (err: any) {
+      console.error(err);
+      alert(isAr ? `خطأ: ${err.message || 'فشل النشر'}` : `Error: ${err.message || 'Failed to post'}`);
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,7 @@ export const AddListingModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, l
               {isAr ? 'نشر أصل جديد' : 'List Global Asset'}
             </h2>
             <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">
-              {type} Market Protocol v4.0
+              Direct Supabase Protocol v5.0
             </p>
           </div>
 
@@ -71,6 +71,7 @@ export const AddListingModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, l
                   required
                   className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   placeholder={isAr ? 'مثال: فيلا فاخرة في دبي' : 'e.g. Luxury Villa in Dubai'}
+                  value={formData.title}
                   onChange={e => setFormData({...formData, title: e.target.value})}
                 />
               </div>
@@ -84,6 +85,7 @@ export const AddListingModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, l
                   type="number" required
                   className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   placeholder="0.00"
+                  value={formData.price}
                   onChange={e => setFormData({...formData, price: e.target.value})}
                 />
               </div>
@@ -97,6 +99,7 @@ export const AddListingModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, l
                   required
                   className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   placeholder={isAr ? 'دبي، لندن، إلخ' : 'City, Country'}
+                  value={formData.location}
                   onChange={e => setFormData({...formData, location: e.target.value})}
                 />
               </div>
@@ -108,6 +111,7 @@ export const AddListingModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, l
                 required rows={3}
                 className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 placeholder={isAr ? 'اشرح تفاصيل العرض...' : 'Describe the asset benefits...'}
+                value={formData.description}
                 onChange={e => setFormData({...formData, description: e.target.value})}
               />
             </div>
@@ -120,7 +124,7 @@ export const AddListingModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, l
               {loading ? <Loader2 className="animate-spin w-6 h-6" /> : (
                 <>
                   <Upload className="w-5 h-5" />
-                  {isAr ? 'تأكيد ونشر' : 'Authorize & List Asset'}
+                  {isAr ? 'تأكيد ونشر عبر Supabase' : 'Authorize & List on Supabase'}
                 </>
               )}
             </button>
