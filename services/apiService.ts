@@ -10,10 +10,13 @@ export class ApiService {
     return ApiService.instance;
   }
 
-  // استخدام Supabase للحصول على التوكن النشط تلقائياً
   private async getAuthHeader() {
-    const { data: { session } } = await supabase.auth.getSession();
-    return session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {};
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {};
+    } catch (e) {
+      return {};
+    }
   }
 
   async getExchangeRates(base: string = 'USD') {
@@ -50,6 +53,7 @@ export class ApiService {
         balance: 0
       };
     } catch (err) {
+      console.error("Profile Fetch Error:", err);
       return null;
     }
   }
@@ -60,21 +64,27 @@ export class ApiService {
       if (!response.ok) return [];
       return await response.json();
     } catch (err) {
+      console.error("Listings Fetch Error:", err);
       return [];
     }
   }
 
   async createListing(listingData: any) {
-    const headers = await this.getAuthHeader();
-    const response = await fetch('/api/listings', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        ...headers
-      },
-      body: JSON.stringify(listingData)
-    });
-    return await response.json();
+    try {
+      const headers = await this.getAuthHeader();
+      const response = await fetch('/api/listings', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...headers
+        },
+        body: JSON.stringify(listingData)
+      });
+      return await response.json();
+    } catch (err) {
+      console.error("Create Listing Error:", err);
+      throw err;
+    }
   }
 }
 
