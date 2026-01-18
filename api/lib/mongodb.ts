@@ -3,6 +3,10 @@ import { MongoClient } from 'mongodb';
 
 const uri = process.env.MONGODB_URI || 'mongodb+srv://getwealthos:GetWealthOS2026%21@cluster0.5zffcaf.mongodb.net/getwealthos';
 
+if (!uri) {
+  throw new Error('Please add your Mongo URI to .env.local');
+}
+
 let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
 
