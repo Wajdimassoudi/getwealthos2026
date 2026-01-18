@@ -14,7 +14,7 @@
     "buffer": "^6.0.3",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.562.0",
-    "mongodb": "^6.3.0",
+    "mongodb": "^6.10.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "recharts": "^2.12.0"
