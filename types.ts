@@ -30,6 +30,20 @@ export interface Country {
   rate: number;
 }
 
+export interface Listing {
+  id: string;
+  user_id: string;
+  type: MarketType;
+  sub_type?: string; // شقة، محل، سيارة دفع رباعي، إلخ
+  title: string;
+  description: string;
+  price: number;
+  location: string;
+  images: string[]; // مصفوفة لـ 6 صور
+  specs?: any; // تفاصيل إضافية (سنة، مساحة، إلخ)
+  created_at: string;
+}
+
 export interface Product {
   id: string;
   title: string;
