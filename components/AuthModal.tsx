@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, Globe, ArrowRight, Loader2 } from 'lucide-react';
 import { COUNTRIES } from '../constants';
-import { Country } from '../types';
+import { supabase } from '../services/supabaseClient';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -31,40 +31,51 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
     setLoading(true);
     setError('');
 
-    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-    
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || data.error || 'Something went wrong');
+      if (isLogin) {
+        // تسجيل الدخول عبر Supabase
+        const { data, error: authError } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (authError) throw authError;
+
+        if (data.user) {
+          const selectedCountry = COUNTRIES.find(c => c.code === (data.user.user_metadata?.country || formData.country)) || COUNTRIES[0];
+          const userData = {
+            id: data.user.id,
+            name: data.user.user_metadata?.full_name || data.user.email,
+            email: data.user.email,
+            country: selectedCountry,
+            balance: 0
+          };
+          onSuccess(userData);
+          onClose();
         }
-
-        const selectedCountry = COUNTRIES.find(c => c.code === (data.user?.country || formData.country)) || COUNTRIES[0];
-        const userData = {
-          ...data.user,
-          country: selectedCountry
-        };
-
-        localStorage.setItem('gw_user', JSON.stringify(userData));
-        setLoading(false);
-        onSuccess(userData);
-        onClose();
       } else {
-        // Handle non-JSON response (like a 500 error page from Vercel)
-        const text = await response.text();
-        console.error("Server returned non-JSON:", text);
-        throw new Error(isAr ? 'خطأ في الاتصال بالسيرفر. حاول مرة أخرى.' : 'Server communication error. Please try again.');
+        // إنشاء حساب عبر Supabase
+        const { data, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              full_name: formData.name,
+              country: formData.country,
+            }
+          }
+        });
+
+        if (authError) throw authError;
+
+        if (data.user) {
+          setError(isAr ? 'تم إنشاء الحساب! يرجى التحقق من بريدك الإلكتروني لتأكيد التسجيل.' : 'Account created! Please check your email to confirm registration.');
+        }
       }
-    } catch (err) {
-      setError(err.message);
+    } catch (err: any) {
+      console.error("Auth Error:", err);
+      setError(err.message || (isAr ? 'حدث خطأ أثناء الاتصال.' : 'An error occurred during authentication.'));
+    } finally {
       setLoading(false);
     }
   };
@@ -96,7 +107,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200 text-xs font-bold">
+            <div className={`mb-6 p-4 rounded-xl text-xs font-bold border ${error.includes('Check your email') || error.includes('تأكيد التسجيل') ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-200' : 'bg-red-500/20 border-red-500/50 text-red-200'}`}>
               {error}
             </div>
           )}

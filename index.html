@@ -50,7 +50,7 @@
         -webkit-text-fill-color: transparent;
       }
 
-      /* Tailwind Animate Fallbacks - Critical for visibility */
+      /* Tailwind Animate Fallbacks */
       .animate-in {
         animation-duration: 1000ms;
         animation-fill-mode: forwards;
@@ -83,6 +83,7 @@
     "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.39.7",
     "@vercel/node": "https://esm.sh/@vercel/node@^5.5.23",
     "mongodb": "https://esm.sh/mongodb@^7.0.0",
     "buffer": "https://esm.sh/buffer@^6.0.3"
@@ -92,7 +93,6 @@
   </head>
   <body class="bg-[#020617] text-white">
     <div id="root"></div>
-    <!-- CRITICAL ENTRY POINT FOR VERCEL DEPLOYMENT -->
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

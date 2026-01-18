@@ -11,10 +11,10 @@ import { MarketTravel } from './components/MarketTravel';
 import { MarketEcommerce } from './components/MarketEcommerce';
 import { MarketFreelance } from './components/MarketFreelance';
 import { aiService } from './services/geminiService';
-import { globalApi } from './services/apiService';
+import { supabase } from './services/supabaseClient';
 import { COUNTRIES, TRANSLATIONS } from './constants';
-import { MarketType, Country, CartItem, Product } from './types';
-import { MessageCircle, X, Send, ShoppingCart, Home, Bitcoin, Briefcase, ShoppingBag, Code, Plane, LayoutGrid } from 'lucide-react';
+import { MarketType, Country, CartItem } from './types';
+import { MessageCircle, X, Send, Home, Bitcoin, Briefcase, ShoppingBag, Code, Plane } from 'lucide-react';
 
 const App: React.FC = () => {
   const [lang, setLang] = useState<'en' | 'ar' | 'fr' | 'es'>('en');
@@ -34,16 +34,52 @@ const App: React.FC = () => {
   const t = (key: string) => TRANSLATIONS[key]?.[lang] || key;
 
   useEffect(() => {
+    // التحقق من الجلسة الحالية عند تحميل الصفحة
     const initAuth = async () => {
-      const savedUser = localStorage.getItem('gw_user');
-      if (savedUser) {
-        const parsed = JSON.parse(savedUser);
-        setUser(parsed);
-        setCountry(parsed.country || COUNTRIES[0]);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const u = session.user;
+        const selectedCountry = COUNTRIES.find(c => c.code === u.user_metadata?.country) || COUNTRIES[0];
+        const userData = {
+          id: u.id,
+          name: u.user_metadata?.full_name || u.email,
+          email: u.email,
+          country: selectedCountry,
+          balance: 0
+        };
+        setUser(userData);
+        setCountry(selectedCountry);
+        setShowWelcome(false);
       }
     };
     initAuth();
+
+    // الاستماع لتغييرات حالة تسجيل الدخول (دخول/خروج)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const u = session.user;
+        const selectedCountry = COUNTRIES.find(c => c.code === u.user_metadata?.country) || COUNTRIES[0];
+        setUser({
+          id: u.id,
+          name: u.user_metadata?.full_name || u.email,
+          email: u.email,
+          country: selectedCountry,
+          balance: 0
+        });
+        setShowWelcome(false);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setShowWelcome(true);
+  };
 
   const handleSendMessage = async () => {
     if (!chatMessage.trim()) return;
@@ -85,7 +121,7 @@ const App: React.FC = () => {
             setLang={setLang} 
             user={user}
             onAuthClick={() => setShowAuth(true)}
-            onLogout={() => { localStorage.removeItem('gw_user'); setUser(null); setShowWelcome(true); }}
+            onLogout={handleLogout}
           />
           
           <main className="max-w-7xl mx-auto px-4 lg:px-8 pt-36 pb-24 animate-in fade-in duration-1000">
