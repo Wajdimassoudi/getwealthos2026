@@ -1,7 +1,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Buffer } from 'buffer';
-import clientPromise from '../mongodb';
+import clientPromise from '../mongodb.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const user = await db.collection('users').findOne({ email, password });
     
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials. Please check your email and password.' });
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     const token = Buffer.from(`${user._id}:${Date.now()}`).toString('base64');
@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         balance: user.balance || 0
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     return res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 }

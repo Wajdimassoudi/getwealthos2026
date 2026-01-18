@@ -1,6 +1,6 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import clientPromise from '../mongodb';
+import clientPromise from '../mongodb.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const client = await clientPromise;
@@ -12,7 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const query = type ? { type } : {};
       const listings = await db.collection('listings').find(query).toArray();
       return res.status(200).json(listings);
-    } catch (error) {
+    } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }
   }
@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         createdAt: new Date()
       });
       return res.status(201).json({ id: result.insertedId, ...listing });
-    } catch (error) {
+    } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }
   }

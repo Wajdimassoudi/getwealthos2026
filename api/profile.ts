@@ -1,7 +1,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Buffer } from 'buffer';
-import clientPromise from './mongodb';
+import clientPromise from './mongodb.js';
 import { ObjectId } from 'mongodb';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       country: user.country,
       balance: user.balance || 0
     });
-  } catch (error) {
+  } catch (error: any) {
     return res.status(500).json({ message: 'Error fetching profile' });
   }
 }

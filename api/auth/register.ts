@@ -1,6 +1,6 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import clientPromise from '../mongodb';
+import clientPromise from '../mongodb.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
@@ -16,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const result = await db.collection('users').insertOne({
       name,
       email,
-      password, // In production, hash this with bcrypt
+      password,
       country,
       createdAt: new Date(),
       balance: 0
@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: 'User created successfully',
       user: { id: result.insertedId, name, email, country }
     });
-  } catch (error) {
+  } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
 }
