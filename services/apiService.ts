@@ -9,7 +9,7 @@ export class ApiService {
     return ApiService.instance;
   }
 
-  // جلب أسعار العملات (لا تزال عبر API خارجي لأنها بيانات متغيرة)
+  // جلب أسعار العملات
   async getExchangeRates(base: string = 'USD') {
     try {
       const response = await fetch(`https://v6.exchangerate-api.com/v6/a06a5496ee0d90cef5bcb62924325393/latest/${base}`);
@@ -43,13 +43,12 @@ export class ApiService {
       const { data, error } = await query.order('created_at', { ascending: false });
       
       if (error) {
-        // إذا لم يكن الجدول موجوداً بعد، سنعيد مصفوفة فارغة لنتجنب انهيار التطبيق
-        console.warn("Supabase Table missing or error:", error);
+        console.warn("Supabase Fetch Error:", error);
         return [];
       }
       return data || [];
     } catch (err) {
-      console.error("Listings Fetch Error:", err);
+      console.error("Listings Fetch Exception:", err);
       return [];
     }
   }
@@ -70,7 +69,7 @@ export class ApiService {
         .select();
 
       if (error) throw error;
-      return data[0];
+      return data ? data[0] : null;
     } catch (err) {
       console.error("Create Listing Error:", err);
       throw err;

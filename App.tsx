@@ -15,6 +15,7 @@ import { supabase } from './services/supabaseClient';
 import { COUNTRIES, TRANSLATIONS } from './constants';
 import { MarketType, Country, CartItem } from './types';
 import { MessageCircle, X, Send, Home, Bitcoin, Briefcase, ShoppingBag, Code, Plane } from 'lucide-react';
+import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 const App: React.FC = () => {
   const [lang, setLang] = useState<'en' | 'ar' | 'fr' | 'es'>('en');
@@ -34,7 +35,6 @@ const App: React.FC = () => {
   const t = (key: string) => TRANSLATIONS[key]?.[lang] || key;
 
   useEffect(() => {
-    // التحقق من الجلسة الحالية
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
@@ -52,8 +52,7 @@ const App: React.FC = () => {
     };
     initAuth();
 
-    // مراقبة تغيير الحالة (دخول/خروج)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       if (session?.user) {
         const u = session.user;
         const selectedCountry = COUNTRIES.find(c => c.code === u.user_metadata?.country) || COUNTRIES[0];
