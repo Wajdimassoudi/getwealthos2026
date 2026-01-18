@@ -1,0 +1,8 @@
+{
+  "name": "Copy of GetWealthOS 20262",
+  "description": "The ultimate global platform for wealth building. Real Estate, Crypto, Jobs, Freelance, and E-commerce. Powered by AI and real-time APIs.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ]
+}

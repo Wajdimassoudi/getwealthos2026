@@ -1,0 +1,16 @@
+
+{
+  "name": "getwealth-os",
+  "version": "1.0.0",
+  "dependencies": {
+    "@google/genai": "^1.37.0",
+    "@vercel/node": "^5.5.23",
+    "buffer": "^6.0.3",
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.562.0",
+    "mongodb": "^6.3.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "recharts": "^2.12.0"
+  }
+}
