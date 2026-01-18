@@ -1,5 +1,6 @@
 
 import { API_CONFIG } from '../constants';
+import { supabase } from './supabaseClient';
 
 export class ApiService {
   private static instance: ApiService;
@@ -9,11 +10,10 @@ export class ApiService {
     return ApiService.instance;
   }
 
-  private getAuthHeader() {
-    const user = localStorage.getItem('gw_user');
-    if (!user) return {};
-    const parsed = JSON.parse(user);
-    return parsed.token ? { 'Authorization': `Bearer ${parsed.token}` } : {};
+  // استخدام Supabase للحصول على التوكن النشط تلقائياً
+  private async getAuthHeader() {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {};
   }
 
   async getExchangeRates(base: string = 'USD') {
@@ -37,49 +37,40 @@ export class ApiService {
     }
   }
 
-  async uploadToCloudinary(file: File) {
-    const formData = new FormData();
-    // Use the Cloudinary name from the provided URL: dxuhj3uuz
-    formData.append('file', file);
-    formData.append('upload_preset', 'ml_default'); 
-
-    try {
-      const response = await fetch('https://api.cloudinary.com/v1_1/dxuhj3uuz/image/upload', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await response.json();
-      return data.secure_url;
-    } catch (err) {
-      console.error("Cloudinary Upload Error:", err);
-      return "https://picsum.photos/800/600";
-    }
-  }
-
   async getProfile() {
     try {
-      const response = await fetch('/api/profile', {
-        headers: this.getAuthHeader()
-      });
-      if (!response.ok) throw new Error('Session expired');
-      return await response.json();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      return {
+        id: user.id,
+        name: user.user_metadata?.full_name || user.email,
+        email: user.email,
+        country: user.user_metadata?.country,
+        balance: 0
+      };
     } catch (err) {
-      console.error("Profile Error:", err);
       return null;
     }
   }
 
   async getListings(type?: string) {
-    const response = await fetch(`/api/listings${type ? `?type=${type}` : ''}`);
-    return await response.json();
+    try {
+      const response = await fetch(`/api/listings${type ? `?type=${type}` : ''}`);
+      if (!response.ok) return [];
+      return await response.json();
+    } catch (err) {
+      return [];
+    }
   }
 
   async createListing(listingData: any) {
+    const headers = await this.getAuthHeader();
     const response = await fetch('/api/listings', {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        ...this.getAuthHeader()
+        ...headers
       },
       body: JSON.stringify(listingData)
     });

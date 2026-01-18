@@ -34,27 +34,25 @@ const App: React.FC = () => {
   const t = (key: string) => TRANSLATIONS[key]?.[lang] || key;
 
   useEffect(() => {
-    // التحقق من الجلسة الحالية عند تحميل الصفحة
+    // التحقق من الجلسة الحالية
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         const u = session.user;
         const selectedCountry = COUNTRIES.find(c => c.code === u.user_metadata?.country) || COUNTRIES[0];
-        const userData = {
+        setUser({
           id: u.id,
           name: u.user_metadata?.full_name || u.email,
           email: u.email,
           country: selectedCountry,
           balance: 0
-        };
-        setUser(userData);
-        setCountry(selectedCountry);
+        });
         setShowWelcome(false);
       }
     };
     initAuth();
 
-    // الاستماع لتغييرات حالة تسجيل الدخول (دخول/خروج)
+    // مراقبة تغيير الحالة (دخول/خروج)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         const u = session.user;
@@ -109,7 +107,6 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen bg-[#020617] ${isAr ? 'rtl font-[Noto_Sans_Arabic]' : 'ltr font-inter'}`}>
-      
       {showWelcome ? (
         <WelcomePage lang={lang} onStart={() => user ? setShowWelcome(false) : setShowAuth(true)} />
       ) : (
@@ -123,7 +120,6 @@ const App: React.FC = () => {
             onAuthClick={() => setShowAuth(true)}
             onLogout={handleLogout}
           />
-          
           <main className="max-w-7xl mx-auto px-4 lg:px-8 pt-36 pb-24 animate-in fade-in duration-1000">
             <div className="flex overflow-x-auto gap-4 mb-16 no-scrollbar pb-4">
               {[
@@ -134,15 +130,7 @@ const App: React.FC = () => {
                 { id: MarketType.FREELANCE, label: t('freelance'), icon: <Code className="w-5 h-5" /> },
                 { id: MarketType.TRAVEL, label: t('travel'), icon: <Plane className="w-5 h-5" /> },
               ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveMarket(tab.id)}
-                  className={`flex items-center gap-4 px-10 py-6 rounded-3xl font-black text-sm transition-all duration-500 ${
-                    activeMarket === tab.id 
-                      ? 'bg-blue-600 text-white shadow-2xl scale-105' 
-                      : 'bg-white/5 text-slate-400 hover:bg-white/10'
-                  }`}
-                >
+                <button key={tab.id} onClick={() => setActiveMarket(tab.id)} className={`flex items-center gap-4 px-10 py-6 rounded-3xl font-black text-sm transition-all duration-500 ${activeMarket === tab.id ? 'bg-blue-600 text-white shadow-2xl scale-105' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}>
                   {tab.icon}
                   {tab.label}
                 </button>
@@ -153,57 +141,30 @@ const App: React.FC = () => {
         </>
       )}
 
-      <AuthModal 
-        isOpen={showAuth} 
-        onClose={() => setShowAuth(false)} 
-        onSuccess={(u) => { setUser(u); setShowWelcome(false); }} 
-        lang={lang} 
-      />
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} onSuccess={(u) => { setUser(u); setShowWelcome(false); }} lang={lang} />
+      <AddListingModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} onSuccess={() => alert(isAr ? 'تم النشر!' : 'Posted!')} lang={lang} type={activeMarket} />
 
-      <AddListingModal 
-        isOpen={showAddModal} 
-        onClose={() => setShowAddModal(false)}
-        onSuccess={() => alert(isAr ? 'تم النشر بنجاح!' : 'Posted successfully!')}
-        lang={lang}
-        type={activeMarket}
-      />
-
-      {/* Floating Chat UI */}
       {!showWelcome && (
         <div className={`fixed bottom-8 ${isAr ? 'left-8' : 'right-8'} z-50`}>
           <button onClick={() => setShowChat(!showChat)} className="bg-blue-600 text-white w-20 h-20 rounded-3xl shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center">
             {showChat ? <X className="w-8 h-8" /> : <MessageCircle className="w-8 h-8" />}
           </button>
-          
           {showChat && (
             <div className="absolute bottom-24 right-0 w-[400px] bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-5">
               <div className="bg-slate-900 p-6 text-white flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                  <span className="font-black text-sm uppercase tracking-widest">AI Wealth OS</span>
-                </div>
+                <span className="font-black text-sm uppercase tracking-widest">AI Wealth OS</span>
               </div>
               <div className="h-[400px] overflow-y-auto p-6 space-y-4 bg-slate-50">
                 {chatHistory.map((m, i) => (
                   <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] p-4 rounded-2xl text-sm font-medium ${m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border text-slate-700'}`}>
-                      {m.text}
-                    </div>
+                    <div className={`max-w-[80%] p-4 rounded-2xl text-sm font-medium ${m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border text-slate-700'}`}>{m.text}</div>
                   </div>
                 ))}
-                {isTyping && <div className="text-xs text-slate-400 font-bold animate-pulse">Assistant is thinking...</div>}
+                {isTyping && <div className="text-xs text-slate-400 font-bold animate-pulse">Thinking...</div>}
               </div>
               <div className="p-4 bg-white border-t flex gap-2">
-                <input 
-                  value={chatMessage}
-                  onChange={e => setChatMessage(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-                  className="flex-1 bg-slate-100 px-4 py-3 rounded-xl focus:outline-none"
-                  placeholder="Ask about wealth..."
-                />
-                <button onClick={handleSendMessage} className="bg-blue-600 p-3 rounded-xl text-white">
-                  <Send className="w-5 h-5" />
-                </button>
+                <input value={chatMessage} onChange={e => setChatMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendMessage()} className="flex-1 bg-slate-100 px-4 py-3 rounded-xl focus:outline-none" placeholder="Ask AI..." />
+                <button onClick={handleSendMessage} className="bg-blue-600 p-3 rounded-xl text-white"><Send className="w-5 h-5" /></button>
               </div>
             </div>
           )}
